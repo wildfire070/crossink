@@ -11,6 +11,7 @@
 #include <esp_system.h>
 
 #include <array>
+#include <limits>
 
 #include "BookStatsActivity.h"
 #include "BookFusionBookIdStore.h"
@@ -88,6 +89,13 @@ void EpubReaderActivity::onEnter() {
       if (dataSize == 4 || dataSize == 6) {
         currentSpineIndex = data[0] + (data[1] << 8);
         nextPageNumber = data[2] + (data[3] << 8);
+        if (nextPageNumber == UINT16_MAX) {
+          // UINT16_MAX is an in-memory navigation sentinel for "open previous
+          // chapter on its last page". It should never be treated as persisted
+          // resume state after sleep or reopen.
+          LOG_DBG("ERS", "Ignoring stale last-page sentinel from progress cache");
+          nextPageNumber = 0;
+        }
         cachedSpineIndex = currentSpineIndex;
         LOG_DBG("ERS", "Loaded cache: %d, %d", currentSpineIndex, nextPageNumber);
       }
@@ -268,7 +276,8 @@ void EpubReaderActivity::loop() {
       onGoHome();
     } else {
       currentSpineIndex = epub->getSpineItemsCount() - 1;
-      nextPageNumber = UINT16_MAX;
+      nextPageNumber = 0;
+      pendingPageJump = std::numeric_limits<uint16_t>::max();
       requestUpdate();
     }
     return;
@@ -632,7 +641,8 @@ void EpubReaderActivity::pageTurn(bool isForwardTurn) {
       // We don't want to delete the section mid-render, so grab the semaphore
       {
         RenderLock lock(*this);
-        nextPageNumber = UINT16_MAX;
+        nextPageNumber = 0;
+        pendingPageJump = std::numeric_limits<uint16_t>::max();
         currentSpineIndex--;
         section.reset();
       }
@@ -721,10 +731,21 @@ void EpubReaderActivity::render(RenderLock&& lock) {
       LOG_DBG("ERS", "Cache found, skipping build...");
     }
 
-    if (nextPageNumber == UINT16_MAX) {
-      section->currentPage = section->pageCount - 1;
+    if (pendingPageJump.has_value()) {
+      if (*pendingPageJump >= section->pageCount && section->pageCount > 0) {
+        section->currentPage = section->pageCount - 1;
+      } else {
+        section->currentPage = *pendingPageJump;
+      }
+      pendingPageJump.reset();
     } else {
       section->currentPage = nextPageNumber;
+      if (section->currentPage < 0) {
+        section->currentPage = 0;
+      } else if (section->currentPage >= section->pageCount && section->pageCount > 0) {
+        LOG_DBG("ERS", "Clamping cached page %d to %d", section->currentPage, section->pageCount - 1);
+        section->currentPage = section->pageCount - 1;
+      }
     }
 
     if (!pendingAnchor.empty()) {
