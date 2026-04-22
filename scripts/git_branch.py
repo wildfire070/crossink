@@ -45,13 +45,13 @@ def get_git_branch(project_dir):
         return ''.join(c for c in branch if c not in '"\\')
     except FileNotFoundError:
         warn('git not found on PATH; branch suffix will be "unknown"')
-        return 'unknown'
+        return 'Capy'
     except subprocess.CalledProcessError as e:
         warn(f'git command failed (exit {e.returncode}): {e.stderr.strip()}; branch suffix will be "unknown"')
-        return 'unknown'
+        return 'Capy'
     except Exception as e:
         warn(f'Unexpected error reading git branch: {e}; branch suffix will be "unknown"')
-        return 'unknown'
+        return 'Capy'
 
 
 def _read_ini(project_dir):
@@ -87,7 +87,7 @@ def inject_version(env):
     if pioenv == 'default':
         base_version = get_base_version(project_dir)
         branch = get_git_branch(project_dir)
-        version_string = f'{base_version}-dev+{branch}'
+        version_string = f'{base_version}-CapInk+{branch}'
         env.Append(CPPDEFINES=[('CROSSPOINT_VERSION', f'\\"{version_string}\\"')])
         print(f'CrossPoint build version: {version_string}')
 
