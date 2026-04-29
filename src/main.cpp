@@ -16,6 +16,7 @@
 #include <cstring>
 
 #include "AppVersion.h"
+#include "BookFusionTokenStore.h"
 #include "CrossPointSettings.h"
 #include "CrossPointState.h"
 #include "GlobalActions.h"
@@ -359,6 +360,7 @@ void setup() {
   SETTINGS.loadFromFile();
   I18N.loadSettings();
   KOREADER_STORE.loadFromFile();
+  BF_TOKEN_STORE.loadFromFile();
   OPDS_STORE.loadFromFile();
   UITheme::getInstance().reload();
   ButtonNavigator::setMappedInputManager(mappedInputManager);
