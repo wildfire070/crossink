@@ -230,8 +230,11 @@ void WebDAVHandler::handlePropfind(WebServer& s) {
       // Skip hidden/protected items
       bool shouldHide = (name[0] == '.');
       if (!shouldHide) {
-        shouldHide = std::any_of(std::begin(HIDDEN_ITEMS), std::end(HIDDEN_ITEMS),
-                         [name](const char* item) { return strcmp(name, item) == 0; });
+        shouldHide = std::any_of(
+            std::begin(HIDDEN_ITEMS),
+            std::end(HIDDEN_ITEMS),
+            [name](const char* item) { return strcmp(name, item) == 0; }
+        );
       }
 
       if (!shouldHide) {
