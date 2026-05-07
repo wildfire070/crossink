@@ -9,7 +9,8 @@
 #include <esp_task_wdt.h>
 
 namespace {
-constexpr const char* HIDDEN_ITEMS[] = {"System Volume Information", "XTCache"};
+const char* HIDDEN_ITEMS[] = {"System Volume Information", "XTCache"};
+constexpr size_t HIDDEN_ITEMS_COUNT = sizeof(HIDDEN_ITEMS) / sizeof(HIDDEN_ITEMS[0]);
 
 // RFC 1123 date format helper: "Sun, 06 Nov 1994 08:49:37 GMT"
 // ESP32 doesn't have real-time clock set by default, so we use a fixed epoch date
@@ -231,11 +232,12 @@ void WebDAVHandler::handlePropfind(WebServer& s) {
       bool shouldHide = (name[0] == '.');
       if (!shouldHide) {
         shouldHide = std::any_of(
-            std::begin(HIDDEN_ITEMS),
-            std::end(HIDDEN_ITEMS),
-            [name](const char* item) { return strcmp(name, item) == 0; }
+          std::begin(HIDDEN_ITEMS),
+          std::end(HIDDEN_ITEMS),
+          [name](const char* item) { return strcmp(name, item) == 0; }
         );
       }
+
 
       if (!shouldHide) {
         String childPath = path;
@@ -773,8 +775,8 @@ bool WebDAVHandler::isProtectedPath(const String& path) const {
 
     if (segment.startsWith(".")) return true;
 
-    for (const auto* item : HIDDEN_ITEMS) {
-      if (segment.equals(item)) return true;
+    for (size_t i = 0; i < HIDDEN_ITEMS_COUNT; i++) {
+      if (segment.equals(HIDDEN_ITEMS[i])) return true;
     }
 
     start = end + 1;
