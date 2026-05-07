@@ -1,5 +1,6 @@
 #include "WebDAVHandler.h"
 
+#include <algorithm>
 #include <Arduino.h>
 #include <Epub.h>
 #include <FsHelpers.h>
@@ -229,12 +230,8 @@ void WebDAVHandler::handlePropfind(WebServer& s) {
       // Skip hidden/protected items
       bool shouldHide = (name[0] == '.');
       if (!shouldHide) {
-        for (const auto* item : HIDDEN_ITEMS) {
-          if (strcmp(name, item) == 0) {
-            shouldHide = true;
-            break;
-          }
-        }
+        shouldHide = std::any_of(std::begin(HIDDEN_ITEMS), std::end(HIDDEN_ITEMS),
+                         [name](const char* item) { return strcmp(name, item) == 0; });
       }
 
       if (!shouldHide) {
