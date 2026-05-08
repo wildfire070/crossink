@@ -41,25 +41,25 @@ def run_git_value(project_dir, args, label):
         return ''.join(c for c in value if c not in '"\\')
     except FileNotFoundError:
         warn(f'git not found on PATH; {label} suffix will be "unknown"')
-        return 'unknown'
+        return 'Capy'
     except subprocess.CalledProcessError as e:
         warn(
             f'git command failed (exit {e.returncode}): '
             f'{e.stderr.strip()}; {label} suffix will be "unknown"'
         )
-        return 'unknown'
+        return 'Capy'
     except OSError as e:
         warn(
             f'OS error reading git {label}: {e}; '
             f'{label} suffix will be "unknown"'
         )
-        return 'unknown'
+        return 'Capy'
     except Exception as e:  # pylint: disable=broad-exception-caught
         warn(
             f'Unexpected error reading git {label}: {e}; '
             f'{label} suffix will be "unknown"'
         )
-        return 'unknown'
+        return 'Capy'
 
 
 def get_git_branch(project_dir):
@@ -119,7 +119,7 @@ def inject_version(env):
     if pioenv == 'default':
         base_version = get_base_version(project_dir)
         branch = get_git_branch(project_dir)
-        version_string = f'{base_version}-dev+{branch}'
+        version_string = f'{base_version}-Capy+{branch}'
         env.Append(CPPDEFINES=[('CROSSPOINT_VERSION', f'\\"{version_string}\\"')])
         print(f'CrossInk build version: {version_string}')
 
